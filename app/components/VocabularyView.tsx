@@ -1,3 +1,5 @@
+'use client';
+
 import { useSpeechSynthesis } from 'react-speech-kit';
 import { SpeakerWaveIcon } from '@heroicons/react/24/outline';
 import { VocabItem } from '../types/vocabulary';
@@ -5,10 +7,9 @@ import { VocabItem } from '../types/vocabulary';
 interface VocabularyViewProps {
   vocabs: VocabItem[];
   viewMode: 'list' | 'grid';
-  isSearching?: boolean;
 }
 
-export default function VocabularyView({ vocabs, viewMode, isSearching }: VocabularyViewProps) {
+export default function VocabularyView({ vocabs, viewMode }: VocabularyViewProps) {
   const { speak, speaking, supported } = useSpeechSynthesis();
 
   const handleSpeak = (text: string) => {
@@ -22,9 +23,7 @@ export default function VocabularyView({ vocabs, viewMode, isSearching }: Vocabu
       {vocabs.map(vocab => (
         <div
           key={vocab.id}
-          className={`bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-all ${
-            isSearching ? 'opacity-50' : ''
-          }`}
+          className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-all"
         >
           {vocab.term && (
             <div className="flex justify-between items-start mb-2">
@@ -35,7 +34,7 @@ export default function VocabularyView({ vocabs, viewMode, isSearching }: Vocabu
                 {supported && (
                   <button
                     onClick={() => handleSpeak(vocab.term)}
-                    disabled={speaking || isSearching}
+                    disabled={speaking}
                     className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors no-select"
                     title="Listen to term"
                   >
@@ -54,7 +53,7 @@ export default function VocabularyView({ vocabs, viewMode, isSearching }: Vocabu
               {supported && (
                 <button
                   onClick={() => handleSpeak(vocab.definition)}
-                  disabled={speaking || isSearching}
+                  disabled={speaking}
                   className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ml-2 flex-shrink-0 no-select"
                   title="Listen to definition"
                 >
