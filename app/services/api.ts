@@ -1,10 +1,7 @@
 import { 
   createClient, 
-  SupabaseClient, 
-  PostgrestResponse,
-  PostgrestFilterBuilder
+  SupabaseClient
 } from '@supabase/supabase-js';
-import { PostgrestQueryBuilder } from '@supabase/postgrest-js';
 import { ApiError } from '../types/error';
 
 export class ApiService {
@@ -25,7 +22,7 @@ export class ApiService {
     return ApiService.instance;
   }
 
-  private handleError(error: unknown): never {
+  private handleError(error: any): any {
     console.error('API Error:', error);
     
     const apiError: ApiError = {
@@ -40,10 +37,10 @@ export class ApiService {
 
   public async query<T>(
     tableName: string,
-    queryBuilder?: (query: PostgrestQueryBuilder<any, any, any>) => PostgrestFilterBuilder<any, any, T>
+    queryBuilder?: (query: any) => any
   ): Promise<T[]> {
     try {
-      const baseQuery = this.client.from(tableName).select('*');
+      const baseQuery: any = this.client.from(tableName).select('*');
       
       const { data, error } = await (queryBuilder 
         ? queryBuilder(baseQuery)
@@ -63,11 +60,11 @@ export class ApiService {
   public async mutate<T>(
     tableName: string,
     operation: 'insert' | 'update' | 'delete',
-    payload?: Record<string, unknown>,
-    conditions?: (query: PostgrestQueryBuilder<any, any, any>) => PostgrestFilterBuilder<any, any, T>
+    payload?: Record<string, any>,
+    conditions?: (query: any) => any
   ): Promise<T[]> {
     try {
-      let baseQuery = this.client.from(tableName);
+      let baseQuery: any = this.client.from(tableName);
       
       switch (operation) {
         case 'insert':

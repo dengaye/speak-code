@@ -1,8 +1,8 @@
 'use client';
 
-import { useSpeechSynthesis } from 'react-speech-kit';
 import { SpeakerWaveIcon } from '@heroicons/react/24/outline';
 import { VocabItem } from '../types/vocabulary';
+import { useSpeech } from '../hooks/useSpeech';
 
 interface VocabularyViewProps {
   vocabs: VocabItem[];
@@ -10,11 +10,11 @@ interface VocabularyViewProps {
 }
 
 export default function VocabularyView({ vocabs, viewMode }: VocabularyViewProps) {
-  const { speak, speaking, supported } = useSpeechSynthesis();
+  const { speak, speaking, supported } = useSpeech();
 
   const handleSpeak = (text: string) => {
     if (supported) {
-      speak({ text });
+      speak(text);
     }
   };
 
@@ -54,7 +54,7 @@ export default function VocabularyView({ vocabs, viewMode }: VocabularyViewProps
                 <button
                   onClick={() => handleSpeak(vocab.definition)}
                   disabled={speaking}
-                  className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ml-2 flex-shrink-0 no-select"
+                  className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors no-select ml-2"
                   title="Listen to definition"
                 >
                   <SpeakerWaveIcon className="h-4 w-4 text-blue-500" />

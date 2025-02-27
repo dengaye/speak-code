@@ -8,12 +8,13 @@ import { termsService } from './services/terms';
 import { VocabItem } from './types/vocabulary';
 import { ApiError } from './types/error';
 
-export default async function Home({
-  searchParams,
-}: {
-  searchParams: { search?: string };
-}) {
-  const searchTerm = searchParams.search || '';
+interface HomeProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default async function Home({ searchParams }: HomeProps) {
+  const params = await searchParams;
+  const searchTerm = typeof params.search === 'string' ? params.search : '';
   let terms: VocabItem[] = [];
   let error: string | null = null;
   
