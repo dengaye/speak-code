@@ -3,6 +3,7 @@
 import { SpeakerWaveIcon } from '@heroicons/react/24/outline';
 import { VocabItem } from '../types/vocabulary';
 import { useSpeech } from '../hooks/useSpeech';
+import EmptyState from './EmptyState';
 
 interface VocabularyViewProps {
   vocabs: VocabItem[];
@@ -17,6 +18,15 @@ export default function VocabularyView({ vocabs, viewMode }: VocabularyViewProps
       speak(text);
     }
   };
+
+  if (!vocabs?.length) {
+    return (
+      <EmptyState
+        title="No terms found"
+        description="Try adjusting your search to find what you're looking for."
+      />
+    );
+  }
 
   return (
     <div className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>

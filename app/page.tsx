@@ -1,10 +1,13 @@
 'use server';
 
+import { Suspense } from 'react';
 import Header from './components/Header';
 import SearchFilter from './components/SearchFilter';
 import VocabularyView from './components/VocabularyView';
+import VocabularySkeleton from './components/VocabularySkeleton';
 import { VocabularyPresenter } from './presenters/VocabularyPresenter';
 import { termsService } from './services/terms';
+import { getCachedTerms } from './services/cache';
 import { VocabItem } from './types/vocabulary';
 import { ApiError } from './types/error';
 
@@ -12,35 +15,54 @@ interface HomeProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
+// 构建时获取数据
+export async function generateStaticParams() {
+  const terms = await getCachedTerms();
+  return {
+    fallback: {
+      '/': { props: { initialTerms: terms } }
+    }
+  };
+}
+
+async function TermsList({ searchTerm }: { searchTerm: string }) {
+  let terms: VocabItem[] = [];
+
+  try {
+    if (searchTerm) {
+      // 搜索时使用实时数据
+      terms = await termsService.searchTerms(searchTerm);
+    } else {
+      // 非搜索时使用缓存数据
+      terms = await getCachedTerms();
+    }
+
+    if (!terms?.length && !searchTerm) {
+      const vocabularyPresenter = new VocabularyPresenter();
+      terms = vocabularyPresenter.getDefaultVocabs();
+    }
+  } catch (e) {
+    const err = e as ApiError;
+    console.error('Error fetching terms:', err.message || 'An unexpected error occurred');
+    const vocabularyPresenter = new VocabularyPresenter();
+    terms = vocabularyPresenter.getDefaultVocabs();
+  }
+
+  return (
+    <VocabularyView
+      vocabs={terms}
+      viewMode="list"
+    />
+  );
+}
+
 export default async function Home({ searchParams }: HomeProps) {
   const params = await searchParams;
   const searchTerm = typeof params.search === 'string' ? params.search : '';
-  let terms: VocabItem[] = [];
-  let error: string | null = null;
-  
-  try {
-    if (searchTerm) {
-      terms = await termsService.searchTerms(searchTerm);
-    } else {
-      terms = await termsService.getTerms();
-    }
-    
-    if (!terms || terms.length === 0) {
-      const vocabularyPresenter = new VocabularyPresenter();
-      terms = vocabularyPresenter.getDefaultVocabs();
-      if (searchTerm) {
-        terms = vocabularyPresenter.filterVocabulary(terms, searchTerm);
-      }
-    }
-  } catch (e: unknown) {
-    console.error('Failed to load terms:', e);
-    const vocabularyPresenter = new VocabularyPresenter();
-    terms = vocabularyPresenter.getDefaultVocabs();
-    if (searchTerm) {
-      terms = vocabularyPresenter.filterVocabulary(terms, searchTerm);
-    }
-    const apiError = e as ApiError;
-    error = apiError.message || 'Failed to load terms';
+
+  // 预加载缓存
+  if (!searchTerm) {
+    await getCachedTerms();
   }
 
   return (
@@ -49,17 +71,9 @@ export default async function Home({ searchParams }: HomeProps) {
         <div className="flex flex-col gap-6">
           <Header />
           <SearchFilter defaultSearchTerm={searchTerm} />
-
-          {error && (
-            <div className="bg-red-50 dark:bg-red-900 p-4 rounded-lg text-red-700 dark:text-red-200">
-              {error}
-            </div>
-          )}
-
-          <VocabularyView 
-            vocabs={terms}
-            viewMode="list"
-          />
+          <Suspense fallback={<VocabularySkeleton />}>
+            <TermsList searchTerm={searchTerm} />
+          </Suspense>
         </div>
       </div>
     </div>

@@ -1,11 +1,24 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
 interface SearchFilterProps {
   defaultSearchTerm?: string;
+}
+
+function debounce(fn: (value: string) => void, delay: number) {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  return (value: string) => {
+    if (timeoutId) {
+      globalThis.clearTimeout(timeoutId);
+    }
+    timeoutId = globalThis.setTimeout(() => {
+      fn(value);
+      timeoutId = null;
+    }, delay);
+  };
 }
 
 export default function SearchFilter({ defaultSearchTerm = '' }: SearchFilterProps) {
@@ -14,18 +27,24 @@ export default function SearchFilter({ defaultSearchTerm = '' }: SearchFilterPro
   const [isPending, startTransition] = useTransition();
   const [searchTerm, setSearchTerm] = useState(defaultSearchTerm);
 
+  const debouncedSearch = useCallback(
+    debounce((value: string) => {
+      startTransition(() => {
+        const params = new URLSearchParams(searchParams.toString());
+        if (value) {
+          params.set('search', value);
+        } else {
+          params.delete('search');
+        }
+        router.push(`/?${params.toString()}`);
+      });
+    }, 300),
+    [searchParams, router]
+  );
+
   const handleSearch = (value: string) => {
     setSearchTerm(value);
-    
-    startTransition(() => {
-      const params = new URLSearchParams(searchParams.toString());
-      if (value) {
-        params.set('search', value);
-      } else {
-        params.delete('search');
-      }
-      router.push(`/?${params.toString()}`);
-    });
+    debouncedSearch(value);
   };
 
   return (

@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useCallback, useEffect } from 'react';
 
 interface UseSpeechOptions {
@@ -18,7 +20,11 @@ interface UseSpeechResult {
 export function useSpeech(options: UseSpeechOptions = {}): UseSpeechResult {
   const [speaking, setSpeaking] = useState(false);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const supported = typeof window !== 'undefined' && 'speechSynthesis' in window;
+  const [supported, setSupported] = useState(false);
+
+  useEffect(() => {
+    setSupported(typeof window !== 'undefined' && 'speechSynthesis' in window);
+  }, []);
 
   useEffect(() => {
     if (!supported) return;
@@ -27,10 +33,8 @@ export function useSpeech(options: UseSpeechOptions = {}): UseSpeechResult {
       setVoices(window.speechSynthesis.getVoices());
     };
 
-    // Get initial voices
     updateVoices();
 
-    // Listen for voice changes
     window.speechSynthesis.onvoiceschanged = updateVoices;
 
     return () => {
@@ -41,7 +45,6 @@ export function useSpeech(options: UseSpeechOptions = {}): UseSpeechResult {
   const speak = useCallback((text: string) => {
     if (!supported) return;
 
-    // Cancel any ongoing speech
     window.speechSynthesis.cancel();
 
     const utterance = new SpeechSynthesisUtterance(text);
