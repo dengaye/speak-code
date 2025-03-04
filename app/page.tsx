@@ -1,5 +1,6 @@
 'use server';
 
+import { Metadata } from 'next';
 import { Suspense } from 'react';
 import Header from './components/Header';
 import SearchFilter from './components/SearchFilter';
@@ -15,13 +16,14 @@ interface HomeProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-// 构建时获取数据
-export async function generateStaticParams() {
-  const terms = await getCachedTerms();
+// 在构建时获取数据并生成元数据
+export async function generateMetadata(): Promise<Metadata> {
+  // 在构建时预热缓存
+  await getCachedTerms();
+  
   return {
-    fallback: {
-      '/': { props: { initialTerms: terms } }
-    }
+    title: 'Speak Code - Frontend Vocabulary',
+    description: 'Learn frontend development terms with pronunciation',
   };
 }
 
@@ -59,11 +61,6 @@ async function TermsList({ searchTerm }: { searchTerm: string }) {
 export default async function Home({ searchParams }: HomeProps) {
   const params = await searchParams;
   const searchTerm = typeof params.search === 'string' ? params.search : '';
-
-  // 预加载缓存
-  if (!searchTerm) {
-    await getCachedTerms();
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">

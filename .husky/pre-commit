@@ -1,0 +1,26 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running TypeScript type check..."
+npm run check-types
+if [ $? -ne 0 ]; then
+  echo "❌ TypeScript check failed. Please fix the above errors before committing."
+  exit 1
+fi
+
+echo "✨ Running ESLint and Prettier checks..."
+exec 5>&1
+output=$(npx lint-staged | tee /dev/fd/5)
+exit_code=$?
+
+if echo "$output" | grep -q "\[error\]"; then
+  echo "❌ Found errors in the code. Please fix them before committing."
+  exit 1
+fi
+
+if echo "$output" | grep -q "\[warn\]"; then
+  echo "⚠️  Found warnings in the code. You can still commit, but please consider fixing these issues:"
+  echo "$output" | grep -A 1 "\[warn\]"
+fi
+
+echo "✅ No errors found! (warnings may exist but won't block commit)"
