@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "fast-dev": "cross-env NEXT_DEVELOPMENT_OPTIMIZE=true NODE_OPTIONS='--max-old-space-size=4096' next dev --turbopack",
     "build": "next build",
+    "test-prod": "cross-env NODE_ENV=production next build && next start",
     "start": "next start",
     "lint": "next lint",
     "prepare": "husky install",
@@ -29,6 +31,7 @@
   "dependencies": {
     "@heroicons/react": "^2.0.18",
     "@supabase/supabase-js": "^2.49.1",
+    "cross-env": "^7.0.3",
     "next": "15.1.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

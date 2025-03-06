@@ -4,6 +4,9 @@ import { SpeakerWaveIcon } from '@heroicons/react/24/outline';
 import { VocabItem } from '../types/vocabulary';
 import { useSpeech } from '../hooks/useSpeech';
 import EmptyState from './EmptyState';
+import CategoryTags from './CategoryTags';
+import SymbolList from './SymbolList';
+import DefinitionView from './DefinitionView';
 
 interface VocabularyViewProps {
   vocabs: VocabItem[];
@@ -56,28 +59,24 @@ export default function VocabularyView({ vocabs, viewMode }: VocabularyViewProps
           )}
           
           {vocab.definition && (
-            <div className="flex justify-between items-start mb-4">
-              <p className="text-gray-600 dark:text-gray-300 flex-1 no-select">
-                {vocab.definition}
-              </p>
-              {supported && (
-                <button
-                  onClick={() => handleSpeak(vocab.definition)}
-                  disabled={speaking}
-                  className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors no-select ml-2"
-                  title="Listen to definition"
-                >
-                  <SpeakerWaveIcon className="h-4 w-4 text-blue-500" />
-                </button>
-              )}
-            </div>
+            <DefinitionView
+              definition={vocab.definition}
+              speak={handleSpeak}
+              speaking={speaking}
+              supported={supported}
+            />
           )}
           
-          {vocab.category && (
-            <span className="inline-block bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-sm px-3 py-1 rounded-full no-select">
-              {vocab.category}
-            </span>
+          {vocab.symbol && (
+            <SymbolList 
+              symbols={vocab.symbol} 
+              speak={handleSpeak} 
+              speaking={speaking} 
+              supported={supported} 
+            />
           )}
+          
+          {vocab.category && <CategoryTags categories={vocab.category} />}
         </div>
       ))}
     </div>

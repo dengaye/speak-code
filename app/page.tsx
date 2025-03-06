@@ -1,16 +1,17 @@
 'use server';
 
 import { Metadata } from 'next';
-import { Suspense } from 'react';
+import { Suspense, lazy } from 'react';
 import Header from './components/Header';
 import SearchFilter from './components/SearchFilter';
-import VocabularyView from './components/VocabularyView';
 import VocabularySkeleton from './components/VocabularySkeleton';
 import { VocabularyPresenter } from './presenters/VocabularyPresenter';
 import { termsService } from './services/terms';
 import { getCachedTerms } from './services/cache';
 import { VocabItem } from './types/vocabulary';
 import { ApiError } from './types/error';
+
+const VocabularyView = lazy(() => import('./components/VocabularyView'));
 
 interface HomeProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -27,10 +28,10 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-async function TermsList({ searchTerm }: { searchTerm: string }) {
-  let terms: VocabItem[] = [];
-
+async function fetchTermsData(searchTerm: string): Promise<VocabItem[]> {
   try {
+    let terms: VocabItem[] = [];
+    
     if (searchTerm) {
       // 搜索时使用实时数据
       terms = await termsService.searchTerms(searchTerm);
@@ -43,12 +44,18 @@ async function TermsList({ searchTerm }: { searchTerm: string }) {
       const vocabularyPresenter = new VocabularyPresenter();
       terms = vocabularyPresenter.getDefaultVocabs();
     }
+    
+    return terms;
   } catch (e) {
     const err = e as ApiError;
     console.error('Error fetching terms:', err.message || 'An unexpected error occurred');
     const vocabularyPresenter = new VocabularyPresenter();
-    terms = vocabularyPresenter.getDefaultVocabs();
+    return vocabularyPresenter.getDefaultVocabs();
   }
+}
+
+async function TermsList({ searchTerm }: { searchTerm: string }) {
+  const terms = await fetchTermsData(searchTerm);
 
   return (
     <VocabularyView
