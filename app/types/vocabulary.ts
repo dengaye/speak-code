@@ -1,10 +1,10 @@
 export interface VocabItem {
   id: string;
   term: string;
-  definition: string;
+  definition?: string;
   /** 多个用 | 分割的 */
-  category: string;
+  category?: string;
   /** 多个用 | 分割的 */
-  symbol: string;
-  url: string;
+  symbol?: string;
+  url?: string;
 }
