@@ -17,9 +17,7 @@ interface HomeProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-// 在构建时获取数据并生成元数据
 export async function generateMetadata(): Promise<Metadata> {
-  // 在构建时预热缓存
   await getCachedTerms();
   
   return {
@@ -33,10 +31,8 @@ async function fetchTermsData(searchTerm: string): Promise<VocabItem[]> {
     let terms: VocabItem[] = [];
     
     if (searchTerm) {
-      // 搜索时使用实时数据
       terms = await termsService.searchTerms(searchTerm);
     } else {
-      // 非搜索时使用缓存数据
       terms = await getCachedTerms();
     }
 

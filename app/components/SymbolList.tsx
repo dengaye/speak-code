@@ -1,17 +1,16 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { SpeakerWaveIcon } from '@heroicons/react/24/outline';
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/solid';
+import AudioButton from './AudioButton';
 
 interface SymbolListProps {
   symbols: string;
   speak: (text: string) => void;
   speaking: boolean;
-  supported: boolean;
 }
 
-export default function SymbolList({ symbols, speak, speaking, supported }: SymbolListProps) {
+export default function SymbolList({ symbols, speak, speaking }: SymbolListProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [height, setHeight] = useState<number | undefined>(0);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -58,16 +57,14 @@ export default function SymbolList({ symbols, speak, speaking, supported }: Symb
               <code className="text-sm bg-gray-100 dark:bg-gray-900 px-2 py-1 rounded font-mono text-gray-800 dark:text-gray-200 no-select">
                 {symbol}
               </code>
-              {supported && (
-                <button
-                  onClick={() => speak(symbol)}
-                  disabled={speaking}
-                  className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors no-select ml-2"
-                  title="Listen to symbol"
-                >
-                  <SpeakerWaveIcon className="h-3.5 w-3.5 text-blue-500" />
-                </button>
-              )}
+              <AudioButton
+                text={symbol}
+                speak={speak}
+                speaking={speaking}
+                size="small"
+                title="Listen to symbol"
+                className="ml-2"
+              />
             </div>
           ))}
         </div>

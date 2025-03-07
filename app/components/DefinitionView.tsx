@@ -1,16 +1,15 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { SpeakerWaveIcon } from '@heroicons/react/24/outline';
+import AudioButton from './AudioButton';
 
 interface DefinitionViewProps {
   definition: string;
   speak: (text: string) => void;
   speaking: boolean;
-  supported: boolean;
 }
 
-export default function DefinitionView({ definition, speak, speaking, supported }: DefinitionViewProps) {
+export default function DefinitionView({ definition, speak, speaking }: DefinitionViewProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isTruncated, setIsTruncated] = useState(false);
   const [height, setHeight] = useState<number | undefined>(0); 
@@ -89,16 +88,13 @@ export default function DefinitionView({ definition, speak, speaking, supported 
         )}
       </div>
       
-      {supported && (
-        <button
-          onClick={() => speak(definition)}
-          disabled={speaking}
-          className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors no-select ml-2 flex-shrink-0"
-          title="Listen to definition"
-        >
-          <SpeakerWaveIcon className="h-4 w-4 text-blue-500" />
-        </button>
-      )}
+      <AudioButton
+        text={definition}
+        speak={speak}
+        speaking={speaking}
+        title="Listen to definition"
+        className="ml-2 flex-shrink-0"
+      />
     </div>
   );
 }

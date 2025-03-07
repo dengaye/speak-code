@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 
 interface UseSpeechOptions {
   rate?: number;
@@ -12,7 +12,6 @@ interface UseSpeechOptions {
 interface UseSpeechResult {
   speak: (text: string) => void;
   speaking: boolean;
-  supported: boolean;
   cancel: () => void;
   voices: SpeechSynthesisVoice[];
 }
@@ -20,15 +19,38 @@ interface UseSpeechResult {
 export function useSpeech(options: UseSpeechOptions = {}): UseSpeechResult {
   const [speaking, setSpeaking] = useState(false);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const [supported, setSupported] = useState(false);
+
+  const speakingRef = useRef(false);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  
+  useEffect(() => {
+    utteranceRef.current = new SpeechSynthesisUtterance();
+    
+    if (options.rate) utteranceRef.current.rate = options.rate;
+    if (options.pitch) utteranceRef.current.pitch = options.pitch;
+    if (options.volume) utteranceRef.current.volume = options.volume;
+    if (options.voice) utteranceRef.current.voice = options.voice;
+    
+    utteranceRef.current.onstart = () => {
+      speakingRef.current = true;
+      setSpeaking(true);
+    };
+    
+    utteranceRef.current.onend = () => {
+      speakingRef.current = false;
+      setSpeaking(false);
+    };
+    
+    utteranceRef.current.onerror = () => {
+      speakingRef.current = false;
+      setSpeaking(false);
+    };
+    return () => {
+      window.speechSynthesis?.cancel?.();
+    };
+  }, [options.rate, options.pitch, options.volume, options.voice]);
 
   useEffect(() => {
-    setSupported(typeof window !== 'undefined' && 'speechSynthesis' in window);
-  }, []);
-
-  useEffect(() => {
-    if (!supported) return;
-
     const updateVoices = () => {
       setVoices(window.speechSynthesis.getVoices());
     };
@@ -40,38 +62,25 @@ export function useSpeech(options: UseSpeechOptions = {}): UseSpeechResult {
     return () => {
       window.speechSynthesis.onvoiceschanged = null;
     };
-  }, [supported]);
+  }, []);
 
   const speak = useCallback((text: string) => {
-    if (!supported) return;
-
+    if (!utteranceRef.current) return;
     window.speechSynthesis.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(text);
     
-    // Apply options
-    if (options.rate) utterance.rate = options.rate;
-    if (options.pitch) utterance.pitch = options.pitch;
-    if (options.volume) utterance.volume = options.volume;
-    if (options.voice) utterance.voice = options.voice;
-
-    utterance.onstart = () => setSpeaking(true);
-    utterance.onend = () => setSpeaking(false);
-    utterance.onerror = () => setSpeaking(false);
-
-    window.speechSynthesis.speak(utterance);
-  }, [options, supported]);
+    utteranceRef.current.text = text;
+    window.speechSynthesis.speak(utteranceRef.current);
+  }, []);
 
   const cancel = useCallback(() => {
-    if (!supported) return;
-    window.speechSynthesis.cancel();
+    window.speechSynthesis?.cancel?.();
+    speakingRef.current = false;
     setSpeaking(false);
-  }, [supported]);
+  }, []);
 
   return {
     speak,
     speaking,
-    supported,
     cancel,
     voices,
   };

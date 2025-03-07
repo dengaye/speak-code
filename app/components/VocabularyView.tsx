@@ -1,12 +1,13 @@
 'use client';
 
-import { SpeakerWaveIcon } from '@heroicons/react/24/outline';
-import { VocabItem } from '../types/vocabulary';
+import  { useCallback } from 'react';
 import { useSpeech } from '../hooks/useSpeech';
-import EmptyState from './EmptyState';
+import { VocabItem } from '../types/vocabulary';
+import AudioButton from './AudioButton';
 import CategoryTags from './CategoryTags';
 import SymbolList from './SymbolList';
 import DefinitionView from './DefinitionView';
+import EmptyState from './EmptyState';
 
 interface VocabularyViewProps {
   vocabs: VocabItem[];
@@ -14,13 +15,11 @@ interface VocabularyViewProps {
 }
 
 export default function VocabularyView({ vocabs, viewMode }: VocabularyViewProps) {
-  const { speak, speaking, supported } = useSpeech();
+  const { speak, speaking } = useSpeech();
 
-  const handleSpeak = (text: string) => {
-    if (supported) {
-      speak(text);
-    }
-  };
+  const handleSpeak = useCallback((text: string) => {
+    speak(text);
+  }, [speak]);
 
   if (!vocabs?.length) {
     return (
@@ -44,16 +43,12 @@ export default function VocabularyView({ vocabs, viewMode }: VocabularyViewProps
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white no-select">
                   {vocab.term}
                 </h3>
-                {supported && (
-                  <button
-                    onClick={() => handleSpeak(vocab.term)}
-                    disabled={speaking}
-                    className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors no-select"
-                    title="Listen to term"
-                  >
-                    <SpeakerWaveIcon className="h-4 w-4 text-blue-500" />
-                  </button>
-                )}
+                <AudioButton
+                  text={vocab.term}
+                  speak={handleSpeak}
+                  speaking={speaking}
+                  title="Listen to term"
+                />
               </div>
             </div>
           )}
@@ -63,7 +58,6 @@ export default function VocabularyView({ vocabs, viewMode }: VocabularyViewProps
               definition={vocab.definition}
               speak={handleSpeak}
               speaking={speaking}
-              supported={supported}
             />
           )}
           
@@ -72,7 +66,6 @@ export default function VocabularyView({ vocabs, viewMode }: VocabularyViewProps
               symbols={vocab.symbol} 
               speak={handleSpeak} 
               speaking={speaking} 
-              supported={supported} 
             />
           )}
           
